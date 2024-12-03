@@ -1,0 +1,22 @@
+1. npm init -y
+
+2. install 
+  npm install express
+  npm install mongoose --save
+  npm install typescript --save-dev
+  npm i cors
+  npm i dotenv
+
+3. tsc -init
+
+4. "rootDir": "./src",  "outDir": "./dist",
+5. makeFolder: src/app.ts & server.ts
+6. "build": "tsc", in script file
+ 
+ npm run build, node/dist/app.ts
+
+ 7."include": ["src"], // which files to compile
+  "exclude": ["node_modules"], // which files to skip
+
+ 8. npm install eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin --save-dev
+9. npx eslint --init
