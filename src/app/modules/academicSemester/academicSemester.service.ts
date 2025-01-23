@@ -46,7 +46,7 @@ const updateAcademicSemesterIntoDB = async (
 
   const result = await AcademicSemester.findOneAndUpdate({ _id: id }, payload, {
     new: true,
-  });
+  }); 
   return result;
 };
 

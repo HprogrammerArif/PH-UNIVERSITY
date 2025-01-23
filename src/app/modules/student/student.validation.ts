@@ -58,7 +58,7 @@ const createStudentValidationSchema = z.object({
     password: z.string().max(20),
     student: z.object({
       name: userNameValidationSchema,
-      gender: z.enum(['male', 'female', 'others'], {
+      gender: z.enum(['male', 'female', 'other'], {
         invalid_type_error: "Gender must be 'male', 'female', or 'others'",
       }),
       dateOfBirth: z.string().optional(),
@@ -82,7 +82,8 @@ const createStudentValidationSchema = z.object({
         .trim(),
       guardian: guardianValidationSchema,
       localGuardian: localGuardianValidationSchema,
-      profileImg: z.string().optional(),
+      admissionSemester: z.string(),
+      profileImg: z.string(),
     }),
   }),
 });
