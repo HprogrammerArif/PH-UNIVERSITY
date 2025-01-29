@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // UserName Schema
-const userNameValidationSchema = z.object({
+const createUserNameValidationSchema = z.object({
   firstName: z
     .string()
     .min(3, 'First name must be at least 3 characters')
@@ -17,7 +17,7 @@ const userNameValidationSchema = z.object({
 });
 
 // Guardian Schema
-const guardianValidationSchema = z.object({
+const createGuardianValidationSchema = z.object({
   fatherName: z.string().nonempty("Father's name is required").trim(),
   fatherOccupation: z
     .string()
@@ -39,7 +39,7 @@ const guardianValidationSchema = z.object({
 });
 
 // Local Guardian Schema
-const localGuardianValidationSchema = z.object({
+const createLocalGuardianValidationSchema = z.object({
   name: z.string().nonempty("Local guardian's name is required").trim(),
   occupation: z
     .string()
@@ -57,7 +57,7 @@ const createStudentValidationSchema = z.object({
   body: z.object({
     password: z.string().max(20),
     student: z.object({
-      name: userNameValidationSchema,
+      name: createUserNameValidationSchema,
       gender: z.enum(['male', 'female', 'other'], {
         invalid_type_error: "Gender must be 'male', 'female', or 'others'",
       }),
@@ -80,14 +80,84 @@ const createStudentValidationSchema = z.object({
         .string()
         .nonempty('Permanent address is required')
         .trim(),
-      guardian: guardianValidationSchema,
-      localGuardian: localGuardianValidationSchema,
+      guardian: createGuardianValidationSchema,
+      localGuardian: createLocalGuardianValidationSchema,
       admissionSemester: z.string(),
       profileImg: z.string(),
     }),
   }),
 });
 
+// UserName Schema for Update
+const updateUserNameValidationSchema = z.object({
+  firstName: z
+    .string()
+    .optional(),
+  middleName: z.string().optional(),
+  lastName: z
+    .string()
+    .optional(),
+});
+
+// Guardian Schema for Update
+const updateGuardianValidationSchema = z.object({
+  fatherName: z.string().trim().optional(),
+  fatherOccupation: z.string().trim().optional(),
+  fatherContactNo: z.string().trim().optional(),
+  motherName: z.string().trim().optional(),
+  motherOccupation: z.string().trim().optional(),
+  motherContactNo: z.string().trim().optional(),
+});
+
+// Local Guardian Schema for Update
+const updateLocalGuardianValidationSchema = z.object({
+  name: z.string().trim().optional(),
+  occupation: z.string().trim().optional(),
+  contactNo: z.string().trim().optional(),
+  address: z.string().trim().optional(),
+});
+
+
+// Update Student Schema
+const updateStudentValidationSchema = z.object({
+  body: z.object({
+    password: z.string().max(20).optional(),
+    student: z.object({
+      name: updateUserNameValidationSchema.optional(),
+      gender: z.enum(['male', 'female', 'other'], {
+        invalid_type_error: "Gender must be 'male', 'female', or 'others'",
+      }).optional(),
+      dateOfBirth: z.string().optional(),
+      email: z
+        .string()
+        .nonempty('Email is required')
+        .email('Invalid email format')
+        .trim()
+        .optional(),
+      contactNo: z.string().nonempty('Contact number is required').trim().optional(),
+      emergencyContactNo: z
+        .string()
+        .nonempty('Emergency contact number is required')
+        .trim()
+        .optional(),
+      bloodGroup: z
+        .enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])
+        .optional(),
+      presentAddress: z.string().nonempty('Present address is required').trim().optional(),
+      permanentAddress: z
+        .string()
+        .nonempty('Permanent address is required')
+        .trim()
+        .optional(),
+      guardian: updateGuardianValidationSchema.optional(),
+      localGuardian: updateLocalGuardianValidationSchema.optional(),
+      admissionSemester: z.string().optional(),
+      profileImg: z.string().optional(),
+    }),
+  }),
+});
+
 export const studentValidations = {
   createStudentValidationSchema,
+  updateStudentValidationSchema
 };
