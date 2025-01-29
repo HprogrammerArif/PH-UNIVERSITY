@@ -12,7 +12,7 @@ const globalErrorHandler = (
   if (res.headersSent) {
     return next(err);
   }
-  const statusCode = 500;
+  const statusCode = err.statusCode || 500;
   const message = err.message || 'Something went wrong!';
 
   res.status(statusCode).send({
