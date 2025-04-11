@@ -4,12 +4,106 @@ import AppError from '../../errors/AppError';
 import HttpStatus from 'http-status';
 import { User } from '../user/user.model';
 import { TStudent } from './student.interface';
+import QueryBuilder from '../../builder/QueryBuilder';
+import { studentSearchableFields } from './student.constant';
 
-const getAllStudentsFromDB = async () => {
-  const result = await Student.find().populate('admissionSemester').populate({
-    path: 'academicDepartment',
-    populate: 'academicFaculty',
-  });
+const getAllStudentsFromDB = async (query: Record<string, unknown>) => {
+  // const querObj = { ...query }; //COPY
+
+  // //{ email: {$reqex: query.searchTerm , $options: i }}
+  // //{ presentAddress: {$reqex: query.searchTerm , $options: i }}
+  // //{ name.firstName: {$reqex: query.searchTerm , $options: i }}
+
+  // const studentSearchableFields = ['email', 'name.firstName', 'presentAddress'];
+
+  // let searchTerm = '';
+  // if (query?.searchTerm) {
+  //   searchTerm = query?.searchTerm as string;
+  // }
+
+  // //1. SEARCH QUERY (METHOD CHAINING)
+  // const searchQuery = Student.find({
+  //   $or: studentSearchableFields.map((field) => ({
+  //     [field]: { $regex: searchTerm, $options: 'i' },
+  //   })),
+  // });
+
+  // //2. FILTERING QUERY
+  // const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
+
+  // excludeFields.forEach((el) => delete querObj[el]);
+
+  // console.log({ query }, { querObj });
+
+  // const filterQuery = searchQuery
+  //   .find(querObj)
+  //   .populate('admissionSemester')
+  //   .populate({
+  //     path: 'academicDepartment',
+  //     populate: {
+  //       path: 'academicFaculty',
+  //     },
+  //   });
+
+  // //SORT
+  // let sort = '-createdAt';
+  // if (query.sort) {
+  //   sort = query.sort as string;
+  // }
+  // const sortQuery = filterQuery.sort(sort);
+
+  // //LIMIT & PAGINATE
+  // let page = 1;
+  // let limit = 1;
+  // let skip = 0;
+
+  // if (query.limit) {
+  //   limit = Number(query.limit);
+  // }
+
+  // if (query.page) {
+  //   page = Number(query.page);
+  //   skip = Number(page - 1) * limit;
+  // }
+
+  // const paginateQuery = sortQuery.skip(skip);
+
+  // const limitQuery = paginateQuery.limit(limit);
+
+  // //FIELD LIMITING
+  // let fields = '__v';
+
+  // //{ fields: 'name,email' }
+  // //{ fields: 'name email' }
+
+  // if (query.fields) {
+  //   fields = (query.fields as string).split(',').join(' ');
+  //   console.log({ fields });
+  // }
+
+  // const fieldQuery = await limitQuery.select(fields);
+
+  // return fieldQuery;
+
+  const studentQuery = new QueryBuilder(
+    Student.find()
+      .populate('admissionSemester')
+      .populate({
+        path: 'academicDepartment',
+        populate: {
+          path: 'academicFaculty',
+        },
+      }),
+    query,
+  )
+    .search(studentSearchableFields)
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await studentQuery.modelQuery;
+  console.log(result);
   return result;
 };
 
@@ -49,7 +143,7 @@ const updateStudentIntoDB = async (id: string, payload: Partial<TStudent>) => {
 
   console.log(modifiedUpdatedData);
 
-  const result = await Student.findOneAndUpdate({ id }, modifiedUpdatedData, {
+  const result = await Student.findByIdAndUpdate( id , modifiedUpdatedData, {
     new: true,
     runValidators: true,
   });
@@ -61,7 +155,7 @@ const getSingleStudentFromDB = async (id: string) => {
   // http://localhost:5000/api/v1/students/1234579 will send id not _id
   //const result = await Student.aggregate([{ $match: { id: id } }]);
   // const result = await Student.findById(id)
-  const result = await Student.findOne({ id })
+  const result = await Student.findById( id )
     .populate('admissionSemester')
     .populate({
       path: 'academicDepartment',
@@ -78,8 +172,8 @@ const deleteStudentFromDB = async (id: string) => {
 
   try {
     session.startTransaction(); //2
-    const deleteStudent = await Student.findOneAndUpdate(
-      { id },
+    const deleteStudent = await Student.findByIdAndUpdate(
+      id ,
       { isDeleted: true },
       { new: true, session },
     );
@@ -88,8 +182,11 @@ const deleteStudentFromDB = async (id: string) => {
       throw new AppError(HttpStatus.BAD_REQUEST, 'Failed to delete student!!');
     }
 
-    const deletedUser = await User.findOneAndUpdate(
-      { id },
+    //get user -id from deleteStudent
+    const userId = deleteStudent.user
+
+    const deletedUser = await User.findByIdAndUpdate(
+      userId,
       { isDeleted: true },
       { new: true, session },
     );
@@ -116,3 +213,82 @@ export const StudentServices = {
   deleteStudentFromDB,
   updateStudentIntoDB,
 };
+
+// const getAllStudentsFromDB = async (query: Record<string, unknown>) => {
+//   const querObj = { ...query }; //COPY
+
+//   //{ email: {$reqex: query.searchTerm , $options: i }}
+//   //{ presentAddress: {$reqex: query.searchTerm , $options: i }}
+//   //{ name.firstName: {$reqex: query.searchTerm , $options: i }}
+
+//   const studentSearchableFields = ['email', 'name.firstName', 'presentAddress'];
+
+//   let searchTerm = '';
+//   if (query?.searchTerm) {
+//     searchTerm = query?.searchTerm as string;
+//   }
+
+//   //1. SEARCH QUERY (METHOD CHAINING)
+//   const searchQuery = Student.find({
+//     $or: studentSearchableFields.map((field) => ({
+//       [field]: { $regex: searchTerm, $options: 'i' },
+//     })),
+//   });
+
+//   //2. FILTERING QUERY
+//   const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
+
+//   excludeFields.forEach((el) => delete querObj[el]);
+
+//   console.log({ query }, { querObj });
+
+//   const filterQuery = searchQuery
+//     .find(querObj)
+//     .populate('admissionSemester')
+//     .populate({
+//       path: 'academicDepartment',
+//       populate: {
+//         path: 'academicFaculty',
+//       },
+//     });
+
+//   //SORT
+//   let sort = '-createdAt';
+//   if (query.sort) {
+//     sort = query.sort as string;
+//   }
+//   const sortQuery = filterQuery.sort(sort);
+
+//   //LIMIT & PAGINATE
+//   let page = 1;
+//   let limit = 1;
+//   let skip = 0;
+
+//   if (query.limit) {
+//     limit = Number(query.limit);
+//   }
+
+//   if (query.page) {
+//     page = Number(query.page);
+//     skip = Number(page - 1) * limit;
+//   }
+
+//   const paginateQuery = sortQuery.skip(skip);
+
+//   const limitQuery = paginateQuery.limit(limit);
+
+//   //FIELD LIMITING
+//   let fields = '__v';
+
+//   //{ fields: 'name,email' }
+//   //{ fields: 'name email' }
+
+//   if (query.fields) {
+//     fields = (query.fields as string).split(',').join(' ');
+//     console.log({ fields });
+//   }
+
+//   const fieldQuery = await limitQuery.select(fields);
+
+//   return fieldQuery;
+// };
