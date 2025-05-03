@@ -6,7 +6,11 @@ import { TStudent } from '../student/student.interface';
 import { Student } from '../student/student.model';
 import { TUser } from './user.interface';
 import { User } from './user.model';
-import { generateAdminId, generateFacultyId, generateStudentId } from './user.utils';
+import {
+  generateAdminId,
+  generateFacultyId,
+  generateStudentId,
+} from './user.utils';
 import HttpStatus from 'http-status';
 import { TFaculty } from '../Faculty/faculty.interface';
 import { AcademicDepartment } from '../academicDepartment/academicDepartment.model';
@@ -190,8 +194,49 @@ const createAdminIntoDB = async (password: string, payload: TFaculty) => {
   }
 };
 
+const getMe = async (userId: string, role: string) => {
+  // const decoded = verifyToken(token, config.jwt_access_secret as string);
+  // const { userId, role } = decoded;
+  // //console.log(userId, role);
+
+  let result = null;
+  if (role === 'student') {
+    result = await Student.findOne({ id: userId })
+      .populate('user')
+      .populate('admissionSemester')
+      .populate('academicDepartment');
+
+    return result;
+  }
+  if (role === 'admin') {
+    result = await Admin.findOne({ id: userId }).populate('user');
+    // .populate('academicDepartment');
+
+    return result;
+  }
+  if (role === 'faculty') {
+    result = await Faculty.findOne({ id: userId }).populate('user');
+    // .populate('academicDepartment')
+    // .populate('courses');
+  }
+
+  return result;
+};
+
+const changeStatus = async (id: string, payload: { status: string }) => {
+  const result = await User.findByIdAndUpdate(id, payload, { new: true });
+
+  if (!result) {
+    throw new AppError(HttpStatus.NOT_FOUND, 'User not found');
+  }
+
+  return result;
+};
+
 export const UserServices = {
   createStudentIntoDB,
   createAdminIntoDB,
   createFacultyIntoDB,
+  getMe,
+  changeStatus,
 };
