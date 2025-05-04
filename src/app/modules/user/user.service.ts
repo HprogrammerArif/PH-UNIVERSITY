@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from 'mongoose';
 import config from '../../config';
 import AppError from '../../errors/AppError';
@@ -16,8 +17,9 @@ import { TFaculty } from '../Faculty/faculty.interface';
 import { AcademicDepartment } from '../academicDepartment/academicDepartment.model';
 import { Faculty } from '../Faculty/faculty.model';
 import { Admin } from '../Admin/admin.model';
+import { sendImageToCloudinary } from '../../utils/sendImageToCloudinary';
 
-const createStudentIntoDB = async (password: string, payload: TStudent) => {
+const createStudentIntoDB = async (file:any, password: string, payload: TStudent) => {
   //create a user object
   const userData: Partial<TUser> = {};
 
@@ -57,9 +59,17 @@ const createStudentIntoDB = async (password: string, payload: TStudent) => {
       );
     }
 
+    const imageName = `${userData.id}${payload?.name?.firstName}`
+    const path = file?.path
+
+    //SEND IMAGE TO CLOUDINARY
+    const {secure_url} = await sendImageToCloudinary(imageName, path); // Upload image to Cloudinary
+
+    //console.log({ 'Image uploaded to Cloudinary:': secure_url });
+
     //create a user (transcation-1) // 3->
     const newUser = await User.create([userData], { session }); //array
-    console.log(newUser);
+    //console.log(newUser);
 
     //create a student
     if (!newUser.length) {
@@ -68,6 +78,7 @@ const createStudentIntoDB = async (password: string, payload: TStudent) => {
     //set id, _id as user for student
     payload.id = newUser[0].id; // embading id
     payload.user = newUser[0]._id; //reference _id
+    payload.profileImg = secure_url
 
     //create a student (transcation-2) // 4->
     const newStudent = await Student.create([payload], { session });

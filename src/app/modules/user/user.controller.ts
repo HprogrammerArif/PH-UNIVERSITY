@@ -4,12 +4,15 @@ import HttpStatus from 'http-status';
 import catchAsync from '../../utils/catchAsync';
 
 const createStudent = catchAsync(async (req, res) => {
+  //console.log(req.file, 'FILE');
+  // console.log(JSON.parse(req.body.data), 'DATA');
+
   //create a schema validation using zod
   const { password, student: studentData } = req.body;
 
   //const zodParsedData = studentValidationSchema.parse(studentData);
 
-  const result = await UserServices.createStudentIntoDB(password, studentData);
+  const result = await UserServices.createStudentIntoDB(req.file, password, studentData);
 
   sendResponse(res, {
     statusCode: HttpStatus.OK,
